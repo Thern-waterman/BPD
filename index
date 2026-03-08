@@ -1,0 +1,151 @@
+import { useState, useCallback } from "react";
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Sector } from "recharts";
+
+const salesData = [
+  { month: "ม.ค.", revenue: 4200, orders: 142, profit: 1890 },
+  { month: "ก.พ.", revenue: 3800, orders: 128, profit: 1520 },
+  { month: "มี.ค.", revenue: 5100, orders: 187, profit: 2295 },
+  { month: "เม.ย.", revenue: 4700, orders: 163, profit: 2115 },
+  { month: "พ.ค.", revenue: 6200, orders: 214, profit: 3100 },
+  { month: "มิ.ย.", revenue: 5800, orders: 198, profit: 2900 },
+  { month: "ก.ค.", revenue: 7100, orders: 241, profit: 3550 },
+  { month: "ส.ค.", revenue: 6600, orders: 223, profit: 3300 },
+];
+
+const categoryData = [
+  { name: "Electronics", value: 38, color: "#00D4FF", details: { topItem: "Laptop Pro X", units: 1240, growth: "+18%" } },
+  { name: "Fashion", value: 27, color: "#FF6B9D", details: { topItem: "Summer Collection", units: 3820, growth: "+12%" } },
+  { name: "Home", value: 21, color: "#00FF9F", details: { topItem: "Smart Planter", units: 892, growth: "+24%" } },
+  { name: "Sports", value: 14, color: "#FFB800", details: { topItem: "Pro Runner 500", units: 456, growth: "+8%" } },
+];
+
+const topProducts = [
+  { name: "Laptop Pro X", sales: 1240, revenue: 62000, trend: "+18%" },
+  { name: "Smart Watch Ultra", sales: 980, revenue: 29400, trend: "+22%" },
+  { name: "Summer Dress Set", sales: 856, revenue: 17120, trend: "+15%" },
+  { name: "Gaming Chair", sales: 634, revenue: 31700, trend: "+9%" },
+  { name: "Pro Runner 500", sales: 456, revenue: 18240, trend: "+8%" },
+];
+
+const renderActiveShape = (props) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent } = props;
+  return (
+    <g>
+      <text x={cx} y={cy - 10} textAnchor="middle" fill="#fff" fontSize={12} fontWeight="600">{payload.name}</text>
+      <text x={cx} y={cy + 14} textAnchor="middle" fill={fill} fontSize={20} fontWeight="800">{`${(percent * 100).toFixed(0)}%`}</text>
+      <Sector cx={cx} cy={cy} innerRadius={innerRadius} outerRadius={outerRadius + 8} startAngle={startAngle} endAngle={endAngle} fill={fill} />
+      <Sector cx={cx} cy={cy} innerRadius={innerRadius - 4} outerRadius={innerRadius - 1} startAngle={startAngle} endAngle={endAngle} fill={fill} />
+    </g>
+  );
+};
+
+export default function Dashboard() {
+  const [selectedBar, setSelectedBar] = useState(null);
+  const [activePieIndex, setActivePieIndex] = useState(0);
+  const [activeMetric, setActiveMetric] = useState("revenue");
+  const [hoveredProduct, setHoveredProduct] = useState(null);
+  const onPieEnter = useCallback((_, index) => setActivePieIndex(index), []);
+  const selectedCategory = categoryData[activePieIndex];
+
+  return (
+    <div style={{ background: "#080C14", minHeight: "100vh", fontFamily: "monospace", color: "#fff", padding: "20px", fontSize: 13 }}>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 10, color: "#00D4FF", letterSpacing: 3, marginBottom: 4 }}>SALES INTELLIGENCE</div>
+        <div style={{ fontSize: 22, fontWeight: 700 }}>Dashboard 2025</div>
+      </div>
+
+      {/* KPI */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 16 }}>
+        {[
+          { label: "รายได้รวม", value: "฿43.5M", color: "#00D4FF" },
+          { label: "คำสั่งซื้อ", value: "1,496", color: "#FF6B9D" },
+          { label: "กำไรสุทธิ", value: "฿20.7M", color: "#00FF9F" },
+          { label: "ลูกค้าใหม่", value: "3,241", color: "#FFB800" },
+        ].map((kpi) => (
+          <div key={kpi.label} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 16 }}>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>{kpi.label}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: kpi.color }}>{kpi.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Charts */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 12, marginBottom: 12 }}>
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <div style={{ fontWeight: 600 }}>แนวโน้มรายเดือน</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {["revenue", "orders", "profit"].map((m) => (
+                <button key={m} onClick={() => setActiveMetric(m)} style={{ border: "none", cursor: "pointer", padding: "4px 10px", borderRadius: 20, fontSize: 11, fontFamily: "monospace", background: activeMetric === m ? "#00D4FF" : "rgba(255,255,255,0.07)", color: activeMetric === m ? "#000" : "rgba(255,255,255,0.6)" }}>
+                  {m === "revenue" ? "รายได้" : m === "orders" ? "ออเดอร์" : "กำไร"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>👆 คลิกแท่งกราฟเพื่อดูรายละเอียด</div>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={salesData} onClick={(d) => d?.activePayload && setSelectedBar(d.activePayload[0].payload)}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 10 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background: "#0D1520", border: "1px solid rgba(0,212,255,0.3)", borderRadius: 8, fontFamily: "monospace", fontSize: 11 }} />
+              <Bar dataKey={activeMetric} fill="#00D4FF" radius={[5,5,0,0]} cursor="pointer" />
+            </BarChart>
+          </ResponsiveContainer>
+          {selectedBar && (
+            <div style={{ marginTop: 10, padding: "10px 14px", background: "rgba(0,212,255,0.08)", borderRadius: 10, border: "1px solid rgba(0,212,255,0.2)", display: "flex", gap: 20, alignItems: "center" }}>
+              <div><div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>เดือน</div><div style={{ color: "#00D4FF", fontWeight: 700 }}>{selectedBar.month}</div></div>
+              <div><div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>รายได้</div><div style={{ fontWeight: 700 }}>฿{selectedBar.revenue?.toLocaleString()}</div></div>
+              <div><div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>ออเดอร์</div><div style={{ fontWeight: 700 }}>{selectedBar.orders}</div></div>
+              <div><div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>กำไร</div><div style={{ color: "#00FF9F", fontWeight: 700 }}>฿{selectedBar.profit?.toLocaleString()}</div></div>
+              <button onClick={() => setSelectedBar(null)} style={{ marginLeft: "auto", background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: 14 }}>✕</button>
+            </div>
+          )}
+        </div>
+
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 16 }}>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>หมวดหมู่สินค้า</div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>👆 hover เพื่อดูรายละเอียด</div>
+          <ResponsiveContainer width="100%" height={160}>
+            <PieChart>
+              <Pie data={categoryData} cx="50%" cy="50%" innerRadius={45} outerRadius={68} dataKey="value" activeIndex={activePieIndex} activeShape={renderActiveShape} onMouseEnter={onPieEnter}>
+                {categoryData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+          <div style={{ padding: "10px 12px", background: `${selectedCategory.color}15`, borderRadius: 8, border: `1px solid ${selectedCategory.color}40`, marginBottom: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: selectedCategory.color, marginBottom: 4 }}>{selectedCategory.name}</div>
+            <div style={{ display: "flex", gap: 12 }}>
+              <div><div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>สินค้าขายดี</div><div style={{ fontSize: 10, fontWeight: 600 }}>{selectedCategory.details.topItem}</div></div>
+              <div><div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>ยอดขาย</div><div style={{ fontSize: 10, fontWeight: 600 }}>{selectedCategory.details.units?.toLocaleString()}</div></div>
+              <div><div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>เติบโต</div><div style={{ fontSize: 10, fontWeight: 600, color: "#00FF9F" }}>{selectedCategory.details.growth}</div></div>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+            {categoryData.map((c, i) => (
+              <div key={i} onMouseEnter={() => setActivePieIndex(i)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 20, background: activePieIndex === i ? `${c.color}20` : "transparent", cursor: "pointer", border: `1px solid ${activePieIndex === i ? c.color : "transparent"}`, transition: "all 0.2s" }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: c.color }} />
+                <span style={{ fontSize: 10 }}>{c.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Products */}
+      <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 16 }}>
+        <div style={{ fontWeight: 600, marginBottom: 12 }}>สินค้าขายดีสูงสุด</div>
+        {topProducts.map((p, i) => (
+          <div key={i} onMouseEnter={() => setHoveredProduct(i)} onMouseLeave={() => setHoveredProduct(null)}
+            style={{ padding: "9px 12px", borderRadius: 8, cursor: "pointer", background: hoveredProduct === i ? "rgba(255,255,255,0.06)" : "transparent", display: "flex", alignItems: "center", gap: 12, transition: "background 0.2s" }}>
+            <div style={{ width: 24, height: 24, borderRadius: 6, background: hoveredProduct === i ? "#00D4FF20" : "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#00D4FF" }}>{i + 1}</div>
+            <div style={{ flex: 1 }}>{p.name}</div>
+            <div style={{ color: "rgba(255,255,255,0.5)", width: 90 }}>{p.sales.toLocaleString()} ชิ้น</div>
+            <div style={{ fontWeight: 600, width: 90 }}>฿{p.revenue.toLocaleString()}</div>
+            <div style={{ padding: "2px 8px", borderRadius: 20, background: "#00FF9F20", color: "#00FF9F", fontSize: 11, fontWeight: 600 }}>▲ {p.trend}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
